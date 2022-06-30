@@ -1,0 +1,11 @@
+.button {
+	-fx-background-color: yellow;
+	-fx-border-color: blue;
+	-fx-border-width: 3;
+}
+
+.myButton {
+	-fx-background-color: yellow;
+	-fx-border-color: red;
+	-fx-border-width: 2;
+}

@@ -1,7 +1,11 @@
 package fr.dawan.addressapp.model;
 
 import java.time.LocalDate;
+import java.util.Random;
 
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import fr.dawan.addressapp.util.LocalDateAdapter;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -39,8 +43,18 @@ public class Person {
 		this.street = new SimpleStringProperty("Rue de Marseille");
 		this.postalCode = new SimpleIntegerProperty(13000);
 		this.city = new SimpleStringProperty("Marseille");
-		this.birthday = new SimpleObjectProperty<LocalDate>(LocalDate.of(1993, 8, 27));
+
+        this.birthday = new SimpleObjectProperty<LocalDate>(LocalDate.of(getRandomNumber(2020, 1950), getRandomNumber(12, 1), 05));
 	}
+
+	/**
+	 * Genère une date aléatoire entre 1940 et 2020
+	 * @return
+	 */
+	private int getRandomNumber(int max, int min) {
+		return new Random().nextInt((max- min)+1) + min;
+	}
+	
 	
 	/*
 	 * Les conventions de nommage des méthodes des propriétés sont les suivantes :
@@ -125,8 +139,8 @@ public class Person {
 	}
 
 	
+	@XmlJavaTypeAdapter(LocalDateAdapter.class)
 	public final LocalDate getBirthday() {
-
 		return birthday.get();
 	}
 	public final void setBirthday(LocalDate birthday) {

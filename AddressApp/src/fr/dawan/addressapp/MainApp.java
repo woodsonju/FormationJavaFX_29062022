@@ -10,8 +10,10 @@ import javax.xml.bind.Unmarshaller;
 
 import fr.dawan.addressapp.model.Person;
 import fr.dawan.addressapp.model.PersonListWrapper;
+import fr.dawan.addressapp.view.BirthdayStatisticsController;
 import fr.dawan.addressapp.view.PersonEditDialogController;
 import fr.dawan.addressapp.view.PersonOverviewController;
+import fr.dawan.addressapp.view.RootLayoutController;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -104,6 +106,15 @@ public class MainApp extends Application {
 			Scene scene = new Scene(rootLayout);
 			
 			primaryStage.setScene(scene);
+			
+			
+			/*
+			 * Donne au controleur l'accès à l'application mainApp
+			 * On va passer la reference de mainApp afin que le controleur 
+			 * puisse acceder aux méthode de mainApp
+			 */
+			RootLayoutController controller =  loader.getController();
+			controller.setMainApp(this);
 			
 			primaryStage.show();
 			
@@ -222,7 +233,7 @@ public class MainApp extends Application {
 		
 		if(file != null) {
 			//Ajout du chemin du fichier dans prefs
-			prefs.put("filesPath", file.getPath());
+			prefs.put("filePath", file.getPath());
 			//Mise à jour du titre du stage (fenetre principale) 
 			//"AdressApp - " + file.getName()  = AddressApp - person.xml
 			primaryStage.setTitle("AddressApp - " + file.getName());
@@ -297,6 +308,38 @@ public class MainApp extends Application {
 			alert.setContentText("Could not load data form file:\n" + file.getPath());
 			
 			alert.showAndWait();
+		}
+	}
+	
+	public void showBirthdayStatistics() {
+		try {
+			//Chargez le fichier fxml et créer un nouvel stage pour la boite de dialogue
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(MainApp.class.getResource("view/BirthdayStatistics.fxml"));
+			AnchorPane page = loader.load();
+			
+			//Creation stage pour la boite de dialogue qui depedant du stage principal 
+			Stage birthdayStatisticsStage = new Stage();
+			birthdayStatisticsStage.setTitle("Birthday Statistics");
+			
+			//Notre fenêtre sera modal par rapport à notre fenêtre stage principal 
+			birthdayStatisticsStage.initModality(Modality.WINDOW_MODAL);
+			birthdayStatisticsStage.initOwner(primaryStage);
+			
+			//Scene contient le layout AnchorPane 
+			Scene scene = new Scene(page);
+			
+			//Ajoute la scene au stage 
+			birthdayStatisticsStage.setScene(scene);
+			
+			//On passe à la méthode setPersonData la liste des personnes avec leurs données
+			BirthdayStatisticsController controller = loader.getController();
+			controller.setPersonData(personData);
+			
+			//Afficher la boite de dialogue 
+			birthdayStatisticsStage.show();
+		}catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	

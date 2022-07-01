@@ -1,8 +1,15 @@
 package fr.dawan.addressapp;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.prefs.Preferences;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
 import fr.dawan.addressapp.model.Person;
+import fr.dawan.addressapp.model.PersonListWrapper;
 import fr.dawan.addressapp.view.PersonEditDialogController;
 import fr.dawan.addressapp.view.PersonOverviewController;
 import javafx.application.Application;
@@ -10,6 +17,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
@@ -64,6 +74,11 @@ public class MainApp extends Application {
 	public void start(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 		this.primaryStage.setTitle("AdressApp");
+		
+		this.primaryStage.getIcons().add(new Image("file:resources/images/address_book_icon.png"));
+		
+		this.primaryStage.setMinHeight(400);
+		this.primaryStage.setMinWidth(740);
 		
 		//Nous allons utiliser nos fichiers FXML dans ces deux méthodes 
 		initRoot();
@@ -167,6 +182,124 @@ public class MainApp extends Application {
 			return false;
 		}
 	}
+	
+	/**
+	 * Retourne la preference du fichier person, c'est  à dire le derner fichier ouvert
+	 * La preference est lue à partir du registre spécifique au systeme d'exploitation
+	 * Si aucune préference est trouvé, nul est retournée
+	 * @return
+	 */
+	public File getPersonFilePath() {
+		
+		/*
+		 * ex ==> prefs  = /fr/dawan/addresapp
+		 */
+		Preferences prefs = Preferences.userNodeForPackage(MainApp.class);
+		
+		/*
+		 * Si mon fichier xml est enregistré dans le dossier testJavaFX\person.xml
+		 * ex : filePath = c:\\users\\admin.......\desktop\testJavaFX\person.xml
+		 * 
+		 */
+		String filePath = prefs.get("filePath", null);
+		
+		if(filePath != null) {
+			return new File(filePath);
+		} else {
+			return null;
+		}
+		
+	}
+	
+	/**
+	 * Definit le chemin du fichier actuellement chargé. 
+	 * Le chemin est persisté dans le registre spécifique au systeme d'exploitation
+	 * @param file: Le fichier ou null pour supprimer le chemin
+	 */
+	public void setPersonFilePath(File file) {
+		
+		Preferences prefs = Preferences.userNodeForPackage(MainApp.class);
+		
+		if(file != null) {
+			//Ajout du chemin du fichier dans prefs
+			prefs.put("filesPath", file.getPath());
+			//Mise à jour du titre du stage (fenetre principale) 
+			//"AdressApp - " + file.getName()  = AddressApp - person.xml
+			primaryStage.setTitle("AddressApp - " + file.getName());
+		} else {
+			prefs.remove("filePath");
+			primaryStage.setTitle("AddressApp");
+		}
+		
+	}
+	
+	
+	/**
+	 * Deserialisation  
+	 * Charge les données person à partir du fichier spécifié 
+	 * Les données person actuelles seront remplacées
+	 * @param file
+	 */
+	public void loadPersonDataFromFile(File file) {
+		try {
+			
+			//Obtient une nouvelle instance d'une classe JAXBContext
+			JAXBContext context = JAXBContext.newInstance(PersonListWrapper.class);
+			Unmarshaller unmarshaller = context.createUnmarshaller();
+			
+			//Lecture du XML à partir du fichier et unmarshalling(deserialisation)
+			PersonListWrapper wrapper =  (PersonListWrapper) unmarshaller.unmarshal(file);
+			
+			personData.clear();
+			
+			personData.addAll(wrapper.getPersons());
+			
+			//Sauvegarde le chemin du fichier dans le registre 
+			setPersonFilePath(file);
+			
+		} catch (Exception e) {    //Attrape toutes les exceptions
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Error");
+			alert.setHeaderText("Could not load data");
+			alert.setContentText("Could not load data form file:\n" + file.getPath());
+			
+			alert.showAndWait();
+		}
+	}
+	
+	/**
+	 * Serialisation 
+	 * Enregistre les données person actuelles dans le fichier spécifié 
+	 * @param file
+	 */
+	public void savePersonDataToFile(File file) {
+		try {
+			JAXBContext  context = JAXBContext.newInstance(PersonListWrapper.class);
+			Marshaller marshaller = context.createMarshaller();
+			
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+			
+			//Wrapping de nos données person 
+			PersonListWrapper wrapper = new PersonListWrapper();
+			
+			wrapper.setPersons(personData);
+			
+			//Marshalling et sauvegarde de l'objet vers le fichier
+			marshaller.marshal(wrapper, file);
+			
+			//Sauvegarde le chemin fichier dans le registre
+			setPersonFilePath(file);
+			
+		} catch (Exception e) {
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Error");
+			alert.setHeaderText("Could not load data");
+			alert.setContentText("Could not load data form file:\n" + file.getPath());
+			
+			alert.showAndWait();
+		}
+	}
+	
 
 	/**
 	 * Retourne le stage principale

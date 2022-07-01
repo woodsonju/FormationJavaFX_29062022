@@ -69,6 +69,7 @@ public class Person {
 	
 	/*
 	 * 3- La methode firstNameProperty definit le getter de la propriété. 
+	 * 
 	 */
 	public StringProperty firstNameProperty() {
 		return this.firstName;
@@ -77,7 +78,6 @@ public class Person {
 	
 	
 	public final String getLastName() {
-
 		return lastName.get();
 	}
 	public final void setLastName(String lastName) {
